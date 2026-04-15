@@ -1,0 +1,127 @@
+project_name: wrds-bootstrap
+inputs:
+  cri_exec_panel: artifacts/wrds/canonical/cri_exec_panel.parquet
+  compustat_firm_year: artifacts/wrds/canonical/compustat_firm_year.parquet
+  hq_history: artifacts/wrds/canonical/hq_history.parquet
+  release_events: artifacts/wrds/canonical/release_events.parquet
+  noncompete_state_year: data/noncompete_state_year.parquet
+  ff_industry_map: data/ff_industry_map.parquet
+  boardex_people: artifacts/wrds/canonical/boardex_people.parquet
+  boardex_board_roles: artifacts/wrds/canonical/boardex_board_roles.parquet
+  boardex_employment: artifacts/wrds/canonical/boardex_employment.parquet
+  execucomp: artifacts/wrds/canonical/execucomp.parquet
+paths:
+  artifacts_dir: artifacts
+  output_dir: artifacts/outputs
+market:
+  definition: msa
+  radius_miles: 60
+  robustness_radii_miles: [100]
+  same_state_fallback: true
+titles:
+  ceo_rule: ceo_or_chair_president
+  baseline_ceo_ready_titles: ["ceo", "president", "coo"]
+  include_cfo_in_robustness: true
+  include_high_seniority_regex: []
+  exclude_interim_in_outcomes: true
+features:
+  boardex_enabled: false
+  predictive_fit_enabled: false
+  iv_enabled: false
+  travel_time_enabled: false
+  conditional_logit_enabled: false
+  blm_bridge_enabled: false
+  optional_external_active_enabled: false
+residualization:
+  year_industry: true
+  year_size_quartile: false
+  year_state: false
+regression:
+  release_window_years: 2
+  fixed_effects: ["market_year", "industry_year"]
+  cluster_by: ["market"]
+  outcome_horizons: [1, 2, 3]
+  use_time_ordered_folds: false
+  crossfit_folds: 5
+  random_seed: 20260414
+wrds:
+  enabled: true
+  username: null
+  pgpass_file: .secrets/wrds.pgpass
+  staging_dir: artifacts/wrds/raw
+  canonical_dir: artifacts/wrds/canonical
+  manifest_path: artifacts/wrds/manifest.json
+  hq_geocode_crosswalk: null
+  build_cri_proxy_from_execucomp: true
+  build_release_events_from_crsp: true
+  compustat_fundamentals:
+    enabled: true
+    required: true
+    library: comp
+    table: funda
+    columns: [gvkey, fyear, datadate, at, ebit, xrd, capx, dltt, dlc, dv, prcc_f, csho, sale, ceq, indfmt, datafmt, consol, popsrc]
+    date_columns: [datadate]
+  company_reference:
+    enabled: true
+    required: true
+    library: comp
+    table: company
+    columns: [gvkey, conm, city, state, addzip, sic]
+    date_columns: []
+  execucomp_anncomp:
+    enabled: true
+    required: false
+    library: execcomp
+    table: anncomp
+    columns: [gvkey, year, execid, exec_fullname, titleann, execrank, pceo]
+    date_columns: []
+  ccm_link_table:
+    enabled: true
+    required: false
+    library: crsp
+    table: ccmxpf_linktable
+    columns: []
+    sql: select gvkey, lpermno as permno, lpermco as permco, linktype, linkprim, linkdt, linkenddt, usedflag from crsp.ccmxpf_linktable
+    date_columns: [linkdt, linkenddt]
+  crsp_delist_table:
+    enabled: true
+    required: false
+    library: crsp
+    table: dsedelist
+    columns: [permno, dlstdt, dlstcd, nwperm, nextdt]
+    date_columns: [dlstdt, nextdt]
+  boardex_people_table:
+    enabled: false
+    required: false
+    library: boardex
+    table: na_wrds_dir_profile_all
+    columns: [directorid, directorname]
+    date_columns: []
+  boardex_board_roles_table:
+    enabled: false
+    required: false
+    library: boardex
+    table: na_wrds_dir_profile_all
+    columns: [directorid, directorname, companyid, companyname, datestartrole, dateendrole, startdate, enddate, title, rolename, brdposition, fulltextdescription, ned, leadershipteam]
+    date_columns: [datestartrole, dateendrole, startdate, enddate]
+  boardex_employment_table:
+    enabled: false
+    required: false
+    library: boardex
+    table: na_wrds_dir_profile_emp
+    columns: [directorid, directorname, companyid, companyname, datestartrole, dateendrole, rolename, brdposition, ned, leadershipteam, isin]
+    date_columns: [datestartrole, dateendrole]
+  capiq_people_analytics_table:
+    enabled: false
+    required: false
+    library: ciq_pplintel
+    table: wrds_professional
+    columns: [companyid, personid, proid, profunctionid, companyname, personname, profunctionname, yearfounded, yearborn, title, countryid, country, stateid, state, startday, startmonth, startyear, endday, endmonth, endyear, rank, prorank, boardrank, proflag, currentproflag, boardflag, currentboardflag, currentflag, keyexecflag, topkeyexecflag, advisorflag, graduateflag, dealmakerflag, sponsorflag, undergraduateflag, onlyoneflag, companyflag, hideflag, committeeid, gvkey]
+    date_columns: []
+  boardex_ciq_link_table:
+    enabled: false
+    required: false
+    library: wrdsapps_plink_boardex_ciq
+    table: boardex_ciq
+    columns: [directorid, directorname, boardid, boardname, bd_ticker, isin, cikcode, title, personid, companyid, companyname, firstname, middlename, lastname, prefix, suffix, salutation, score, matchstyle]
+    date_columns: []

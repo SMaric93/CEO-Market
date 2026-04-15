@@ -1,0 +1,56 @@
+project_name: synthetic-wgc
+inputs:
+  cri_exec_panel: tests/fixtures/synthetic_cri.parquet
+  compustat_firm_year: tests/fixtures/synthetic_compustat.parquet
+  hq_history: tests/fixtures/synthetic_hq.parquet
+  release_events: tests/fixtures/synthetic_delist.parquet
+  noncompete_state_year: tests/fixtures/synthetic_noncompete.parquet
+  ff_industry_map: tests/fixtures/synthetic_ff_map.parquet
+  crsp_daily: tests/fixtures/synthetic_crsp_daily.parquet
+  ceo_announcement_dates: tests/fixtures/synthetic_ceo_announcements.parquet
+  boardex_people: tests/fixtures/synthetic_boardex_people.parquet
+  boardex_board_roles: tests/fixtures/synthetic_boardex_board_roles.parquet
+  boardex_employment: tests/fixtures/synthetic_boardex_employment.parquet
+  reviewed_person_crosswalk: tests/fixtures/synthetic_crosswalk.parquet
+paths:
+  artifacts_dir: artifacts
+  output_dir: artifacts
+sample:
+  start_year: 2018
+  end_year: 2023
+  min_assets: 10
+  exclude_financials: true
+  exclude_utilities: true
+  exclude_public_sector: true
+  require_hq_coordinates: true
+market:
+  definition: radius
+  radius_miles: 60
+  robustness_radii_miles: [100]
+  same_state_fallback: false
+titles:
+  ceo_rule: ceo_or_chair_president
+  baseline_ceo_ready_titles: ["ceo", "president", "coo"]
+  include_cfo_in_robustness: true
+  include_high_seniority_regex: []
+  exclude_interim_in_outcomes: true
+features:
+  boardex_enabled: false
+  predictive_fit_enabled: false
+  iv_enabled: false
+  travel_time_enabled: false
+  conditional_logit_enabled: false
+  blm_bridge_enabled: false
+  optional_external_active_enabled: false
+residualization:
+  year_industry: true
+  year_size_quartile: false
+  year_state: false
+regression:
+  release_window_years: 2
+  fixed_effects: ["market_year", "industry_year"]
+  cluster_by: ["market"]
+  outcome_horizons: [1, 2, 3]
+  use_time_ordered_folds: false
+  crossfit_folds: 3
+  random_seed: 20260414
